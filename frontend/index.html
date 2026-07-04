@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TVoid</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <script src="/js/api.js" defer></script>
+    <script src="/js/home.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="logo" href="/"><span class="logo-mark">T</span><span>TVoid</span></a>
+      <nav class="nav">
+        <a class="active" href="/">Home</a>
+        <a href="/series.html">Serie TV</a>
+        <a href="/#movies">Film</a>
+      </nav>
+    </header>
+
+    <main class="page">
+      <section class="hero" id="featured-hero">
+        <div class="hero-copy-block">
+          <p class="eyebrow">Libreria locale</p>
+          <h1>TVoid</h1>
+          <p class="hero-copy">Le tue serie in streaming dal filesystem, con ripresa automatica della visione.</p>
+        </div>
+      </section>
+
+      <section class="content-section" id="continue-section">
+        <div class="section-heading">
+          <h2>Continua a guardare</h2>
+        </div>
+        <div class="row-scroll" id="continue-row"></div>
+      </section>
+
+      <section class="content-section">
+        <div class="section-heading">
+          <h2>Serie TV</h2>
+          <a class="text-link" href="/series.html">Vedi tutte</a>
+        </div>
+        <div class="row-scroll" id="series-row"></div>
+      </section>
+
+      <section class="content-section" id="movies">
+        <div class="section-heading">
+          <h2>Film</h2>
+        </div>
+        <div class="row-scroll" id="movies-row"></div>
+      </section>
+
+      <section class="content-section">
+        <div class="section-heading">
+          <h2>Aggiunte di recente</h2>
+        </div>
+        <div class="row-scroll" id="recent-row"></div>
+      </section>
+    </main>
+  </body>
+</html>

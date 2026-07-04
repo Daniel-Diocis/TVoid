@@ -1,0 +1,983 @@
+:root {
+  color-scheme: dark;
+  --bg: #05060a;
+  --bg-elevated: #0a0d14;
+  --panel: #111522;
+  --panel-strong: #171d2d;
+  --text: #f8fafc;
+  --muted: #a5adbd;
+  --soft: #d8deea;
+  --line: rgba(255, 255, 255, 0.11);
+  --line-strong: rgba(255, 255, 255, 0.18);
+  --accent: #7c6dff;
+  --accent-2: #11c4e8;
+  --success: #35e0a1;
+  --danger: #ff5573;
+  --shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+  --radius: 8px;
+  font-family:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  background: var(--bg);
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    linear-gradient(135deg, rgba(124, 109, 255, 0.12), transparent 24rem),
+    linear-gradient(180deg, #090b12 0%, var(--bg) 32rem);
+  color: var(--text);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  min-height: 4.5rem;
+  padding: 0 5vw;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(5, 6, 10, 0.78);
+  backdrop-filter: blur(20px);
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  font-size: 1.35rem;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.logo-mark {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 7px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  box-shadow: 0 12px 28px rgba(17, 196, 232, 0.18);
+  font-size: 1rem;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--muted);
+  font-size: 0.94rem;
+  font-weight: 750;
+}
+
+.nav a {
+  min-height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 0.85rem;
+  border-radius: var(--radius);
+}
+
+.nav a:hover,
+.nav a.active {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.page,
+.watch-page {
+  width: min(100%, 1500px);
+  margin: 0 auto;
+  padding: 1.8rem 5vw 4rem;
+}
+
+.hero {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  align-items: end;
+  min-height: clamp(24rem, 54vh, 34rem);
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(124, 109, 255, 0.18), rgba(17, 196, 232, 0.08)),
+    var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(90deg, rgba(5, 6, 10, 0.96) 0%, rgba(5, 6, 10, 0.78) 42%, rgba(5, 6, 10, 0.15) 100%),
+    linear-gradient(0deg, rgba(5, 6, 10, 0.88) 0%, transparent 48%);
+}
+
+.hero-media {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+}
+
+.hero-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
+.hero-copy-block {
+  width: min(42rem, 100%);
+  padding: clamp(1.4rem, 4vw, 3.25rem);
+}
+
+.hero h1,
+.series-info h1,
+.watch-meta h1,
+.content-section h1 {
+  margin: 0;
+  font-size: clamp(2.25rem, 7vw, 5.75rem);
+  line-height: 0.94;
+  letter-spacing: 0;
+}
+
+.hero-copy {
+  max-width: 41rem;
+  margin: 1rem 0 1.35rem;
+  color: var(--soft);
+  font-size: 1.06rem;
+  line-height: 1.65;
+}
+
+.eyebrow {
+  margin: 0 0 0.7rem;
+  color: var(--accent-2);
+  font-size: 0.76rem;
+  font-weight: 900;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.content-section {
+  margin-top: 3rem;
+}
+
+.library-heading {
+  margin-top: 1rem;
+}
+
+.section-heading,
+.watch-meta,
+.season-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.1rem;
+}
+
+.section-heading h2,
+.season-block h2 {
+  margin: 0;
+  font-size: 1.45rem;
+  letter-spacing: 0;
+}
+
+.text-link,
+.season-heading span {
+  color: var(--muted);
+  font-size: 0.94rem;
+  font-weight: 750;
+}
+
+.text-link:hover {
+  color: var(--text);
+}
+
+.row-scroll {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(12.5rem, 15.5rem);
+  gap: 1.05rem;
+  overflow-x: auto;
+  padding: 0.25rem 0 1.15rem;
+  scrollbar-color: var(--panel-strong) transparent;
+}
+
+#continue-row {
+  grid-auto-columns: minmax(20rem, 27rem);
+}
+
+.poster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12.5rem, 1fr));
+  gap: 1.25rem;
+}
+
+.library-grid {
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+}
+
+.poster-card,
+.continue-card,
+.episode-card {
+  min-width: 0;
+  border-radius: var(--radius);
+  outline: 1px solid transparent;
+  transition:
+    transform 180ms ease,
+    filter 180ms ease,
+    outline-color 180ms ease;
+}
+
+.poster-card:hover,
+.continue-card:hover,
+.episode-card:hover {
+  transform: translateY(-5px);
+  filter: brightness(1.08);
+  outline-color: rgba(255, 255, 255, 0.16);
+}
+
+.poster-frame,
+.thumb-frame {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(124, 109, 255, 0.36), rgba(17, 196, 232, 0.18)),
+    var(--panel);
+}
+
+.poster-frame {
+  aspect-ratio: 2 / 3;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.28);
+}
+
+.thumb-frame {
+  aspect-ratio: 16 / 9;
+}
+
+.poster-frame img,
+.thumb-frame img {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.poster-shine {
+  position: absolute;
+  inset: auto 0 0;
+  height: 46%;
+  background: linear-gradient(0deg, rgba(0, 0, 0, 0.72), transparent);
+  pointer-events: none;
+}
+
+.poster-progress {
+  position: absolute;
+  left: 0.65rem;
+  right: 0.65rem;
+  bottom: 0.65rem;
+  z-index: 2;
+  height: 0.32rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.poster-progress span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+.placeholder {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  color: rgba(255, 255, 255, 0.92);
+  font-weight: 950;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.placeholder::before {
+  content: "";
+  position: absolute;
+  inset: 0.9rem;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 7px;
+}
+
+.placeholder.small {
+  font-size: 0.9rem;
+}
+
+.poster-copy {
+  padding-top: 0.75rem;
+}
+
+.card-title {
+  font-weight: 850;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.card-meta,
+.muted {
+  color: var(--muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.continue-card {
+  display: block;
+  padding: 0.65rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.045);
+  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.18);
+}
+
+.continue-body {
+  min-height: 6rem;
+  padding: 0.85rem 0.2rem 0.15rem;
+}
+
+.continue-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.35rem;
+}
+
+.episode-code {
+  color: var(--accent-2);
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0;
+}
+
+.mini-pill,
+.watch-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.65rem;
+  padding: 0 0.55rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(5, 6, 10, 0.72);
+  color: var(--text);
+  font-size: 0.74rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.watch-badge {
+  z-index: 2;
+  position: absolute;
+  right: 0.55rem;
+  bottom: 0.55rem;
+}
+
+.progress-track {
+  height: 0.34rem;
+  margin-top: 0.75rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+.empty-state {
+  width: 100%;
+  padding: 1.4rem;
+  border: 1px dashed var(--line);
+  border-radius: var(--radius);
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.series-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(11rem, 16rem) minmax(0, 1fr);
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  align-items: center;
+  margin: 0 0 1.4rem;
+  padding: clamp(1.1rem, 3vw, 2.25rem);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(124, 109, 255, 0.16), rgba(17, 196, 232, 0.06)),
+    rgba(255, 255, 255, 0.04);
+  box-shadow: var(--shadow);
+}
+
+.series-poster {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background:
+    linear-gradient(135deg, rgba(124, 109, 255, 0.36), rgba(17, 196, 232, 0.18)),
+    var(--panel);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.34);
+}
+
+.series-poster img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.series-poster-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 950;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.series-info {
+  min-width: 0;
+}
+
+.series-info p {
+  max-width: 56rem;
+  color: var(--soft);
+  line-height: 1.7;
+}
+
+.series-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.85rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+  font-weight: 750;
+}
+
+.series-meta span {
+  display: inline-flex;
+  align-items: center;
+}
+
+.series-meta span:not(:last-child)::after {
+  content: "•";
+  margin-left: 0.55rem;
+  color: rgba(255, 255, 255, 0.28);
+}
+
+.series-primary-action {
+  margin-top: 1.2rem;
+}
+
+.movie-preview-section {
+  margin-top: 1.5rem;
+}
+
+.movie-preview-card {
+  display: grid;
+  grid-template-columns: minmax(14rem, 24rem) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: center;
+  padding: 0.85rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.movie-preview-thumb {
+  width: 100%;
+}
+
+.movie-preview-copy {
+  min-width: 0;
+}
+
+.hidden-progress {
+  visibility: hidden;
+}
+
+.season-tabs {
+  display: flex;
+  gap: 0.6rem;
+  margin: 1.4rem 0 1.2rem;
+  overflow-x: auto;
+  padding-bottom: 0.35rem;
+  scrollbar-color: var(--panel-strong) transparent;
+}
+
+.season-tab {
+  flex: 0 0 auto;
+  min-height: 2.6rem;
+  padding: 0 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.045);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.92rem;
+  font-weight: 850;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.season-tab:hover {
+  transform: translateY(-2px);
+  color: var(--text);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.season-tab.active {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+}
+
+.episodes-panel {
+  padding: clamp(0.85rem, 2vw, 1.25rem);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.032);
+}
+
+.episode-list {
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 1rem;
+}
+
+.episode-row {
+  display: grid;
+  grid-template-columns: minmax(10rem, 13rem) minmax(0, 1fr);
+  align-items: stretch;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.045);
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease;
+}
+
+.episode-row:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.episode-row.in-progress {
+  border-color: rgba(124, 109, 255, 0.34);
+}
+
+.episode-row.completed {
+  border-color: rgba(53, 224, 161, 0.32);
+}
+
+.episode-thumb {
+  position: relative;
+  min-width: 0;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  align-self: start;
+  border-right: 1px solid var(--line);
+  background:
+    linear-gradient(135deg, rgba(124, 109, 255, 0.34), rgba(17, 196, 232, 0.2)),
+    var(--panel);
+}
+
+.episode-thumb-img {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.episode-thumb-placeholder {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 0.8rem;
+  color: rgba(255, 255, 255, 0.92);
+  font-size: 0.9rem;
+  font-weight: 950;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.episode-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: start;
+  gap: 0.65rem 0.9rem;
+  min-height: 7.4rem;
+  padding: 0.95rem 1rem;
+}
+
+.episode-header {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.episode-title-block {
+  min-width: 0;
+}
+
+.episode-code {
+  display: block;
+}
+
+.episode-title {
+  margin: 0.18rem 0 0;
+  font-size: 1rem;
+  font-weight: 820;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.episode-status {
+  flex-shrink: 0;
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  min-height: 1.65rem;
+  padding: 0 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  background: rgba(5, 6, 10, 0.62);
+  color: var(--text);
+  font-size: 0.74rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.episode-status.in-progress {
+  border-color: rgba(124, 109, 255, 0.34);
+  background: rgba(124, 109, 255, 0.12);
+  color: var(--accent-2);
+}
+
+.episode-status.completed {
+  border-color: rgba(53, 224, 161, 0.28);
+  background: rgba(53, 224, 161, 0.16);
+  color: #dffcf1;
+}
+
+.episode-progress {
+  grid-column: 1;
+  align-self: end;
+  height: 0.34rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.episode-progress.empty {
+  visibility: hidden;
+}
+
+.episode-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+.episode-row.completed .episode-progress-fill {
+  background: linear-gradient(90deg, var(--success), var(--accent-2));
+}
+
+.episode-progress-value {
+  grid-column: 2;
+  align-self: center;
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.watch-body {
+  background:
+    linear-gradient(135deg, rgba(17, 196, 232, 0.08), transparent 24rem),
+    var(--bg);
+}
+
+.watch-page {
+  max-width: 1500px;
+  padding-top: 1.6rem;
+}
+
+.watch-meta {
+  align-items: center;
+  margin: 0 0 1.25rem;
+  padding: 1.15rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.watch-meta h1 {
+  font-size: clamp(1.9rem, 4vw, 3.6rem);
+}
+
+.watch-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.7rem;
+}
+
+.player-shell {
+  overflow: hidden;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: #000;
+  box-shadow: var(--shadow);
+}
+
+video {
+  display: block;
+  width: 100%;
+  max-height: calc(100vh - 13.5rem);
+  background: #000;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem;
+  padding: 0 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius);
+  font-weight: 850;
+  white-space: nowrap;
+  transition:
+    transform 160ms ease,
+    filter 160ms ease,
+    background 160ms ease;
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.button.primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+}
+
+.button.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+}
+
+.button.disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.hidden {
+  display: none !important;
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    padding: 0 1rem;
+  }
+
+  .page,
+  .watch-page {
+    padding-inline: 1rem;
+  }
+
+  .hero {
+    min-height: 24rem;
+  }
+
+  .hero::after {
+    background:
+      linear-gradient(90deg, rgba(5, 6, 10, 0.95), rgba(5, 6, 10, 0.56)),
+      linear-gradient(0deg, rgba(5, 6, 10, 0.92), transparent 58%);
+  }
+
+  .row-scroll {
+    grid-auto-columns: minmax(11rem, 13rem);
+  }
+
+  #continue-row {
+    grid-auto-columns: minmax(18rem, 22rem);
+  }
+
+  .series-hero {
+    grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr);
+  }
+
+  .episode-row {
+    grid-template-columns: minmax(8.5rem, 11rem) minmax(0, 1fr);
+  }
+
+  .movie-preview-card {
+    grid-template-columns: minmax(12rem, 18rem) minmax(0, 1fr);
+  }
+
+  .watch-meta {
+    display: grid;
+    align-items: start;
+  }
+
+  .watch-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 620px) {
+  body {
+    background: linear-gradient(180deg, #090b12 0%, var(--bg) 28rem);
+  }
+
+  .topbar {
+    min-height: 4rem;
+  }
+
+  .logo {
+    font-size: 1.15rem;
+  }
+
+  .nav a {
+    padding: 0 0.65rem;
+  }
+
+  .hero {
+    min-height: 22rem;
+  }
+
+  .hero-copy-block {
+    padding: 1.2rem;
+  }
+
+  .content-section {
+    margin-top: 2.25rem;
+  }
+
+  .section-heading,
+  .season-heading {
+    align-items: flex-start;
+  }
+
+  .row-scroll,
+  #continue-row {
+    grid-auto-columns: minmax(78vw, 1fr);
+  }
+
+  .poster-grid,
+  .library-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .series-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .series-poster {
+    max-width: 13rem;
+  }
+
+  .movie-preview-card {
+    grid-template-columns: 1fr;
+  }
+
+  .season-tabs {
+    margin-top: 1rem;
+  }
+
+  .episode-row {
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+  }
+
+  .episode-main {
+    min-height: 7.2rem;
+    padding: 0.75rem;
+  }
+
+  .episode-header {
+    gap: 0.55rem;
+  }
+
+  .episode-status {
+    min-height: 1.45rem;
+    padding: 0 0.45rem;
+    font-size: 0.68rem;
+  }
+
+  .watch-meta {
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
+
+  .watch-actions,
+  .button {
+    width: 100%;
+  }
+
+  video {
+    max-height: calc(100vh - 15rem);
+  }
+}

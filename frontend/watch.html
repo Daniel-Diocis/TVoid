@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Guarda - TVoid</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <script src="/js/api.js" defer></script>
+    <script src="/js/watch.js" defer></script>
+  </head>
+  <body class="watch-body">
+    <header class="topbar">
+      <a class="logo" href="/"><span class="logo-mark">T</span><span>TVoid</span></a>
+      <nav class="nav">
+        <a href="/">Home</a>
+        <a href="/series.html">Serie TV</a>
+        <a href="/#movies">Film</a>
+      </nav>
+    </header>
+
+    <main class="watch-page">
+      <section class="watch-meta">
+        <div>
+          <p class="eyebrow" id="episode-kicker">TVoid</p>
+          <h1 id="episode-title">Caricamento...</h1>
+          <p class="muted" id="episode-subtitle"></p>
+        </div>
+        <div class="watch-actions">
+          <a class="button secondary hidden" id="back-series-button" href="#">Torna alla serie</a>
+          <a class="button primary hidden" id="next-button" href="#">Prossimo episodio</a>
+        </div>
+      </section>
+
+      <section class="player-shell">
+        <video id="video-player" controls autoplay playsinline>
+          <source id="video-source" src="" type="video/mp4" />
+        </video>
+      </section>
+    </main>
+  </body>
+</html>
