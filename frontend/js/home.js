@@ -4,6 +4,33 @@ const recentRow = document.querySelector("#recent-row");
 const moviesRow = document.querySelector("#movies-row");
 const continueSection = document.querySelector("#continue-section");
 const featuredHero = document.querySelector("#featured-hero");
+const homeRows = [continueRow, seriesRow, moviesRow, recentRow];
+
+function setHomeRowsBusy(isBusy) {
+  homeRows.forEach((row) => row.setAttribute("aria-busy", String(isBusy)));
+}
+
+function setHomeRowsLive(isLive) {
+  homeRows.forEach((row) => {
+    if (isLive) {
+      row.setAttribute("aria-live", "polite");
+      row.setAttribute("aria-atomic", "false");
+      return;
+    }
+
+    row.removeAttribute("aria-live");
+    row.removeAttribute("aria-atomic");
+  });
+}
+
+function setHomeRowsState(message) {
+  const state = emptyState(message);
+  setHomeRowsLive(true);
+  continueSection.classList.remove("hidden");
+  homeRows.forEach((row) => {
+    row.innerHTML = state;
+  });
+}
 
 function posterCard(item, type = "series") {
   const href = type === "movie" ? `/movie.html?id=${item.id}` : `/series.html?id=${item.id}`;
@@ -130,16 +157,15 @@ function renderHero(data) {
 }
 
 async function bootHome() {
-  continueRow.innerHTML = emptyState("Scansione libreria...");
-  seriesRow.innerHTML = "";
-  recentRow.innerHTML = "";
-  moviesRow.innerHTML = "";
+  setHomeRowsBusy(true);
+  setHomeRowsState("Scansione libreria...");
 
   try {
     await TVoidAPI.scan();
     const data = await TVoidAPI.home();
 
     renderHero(data);
+    setHomeRowsLive(false);
 
     continueSection.classList.toggle("hidden", data.continue_watching.length === 0);
     continueRow.innerHTML = data.continue_watching.length
@@ -160,8 +186,10 @@ async function bootHome() {
 
     installImageFallbacks();
   } catch (error) {
-    seriesRow.innerHTML = emptyState("Non riesco a caricare la libreria.");
+    setHomeRowsState("Non riesco a caricare la libreria.");
     console.error(error);
+  } finally {
+    setHomeRowsBusy(false);
   }
 }
 

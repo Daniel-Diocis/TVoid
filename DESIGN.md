@@ -315,7 +315,7 @@ Artwork and video are clipped to their containers. Rectangular framing stays con
 - Poster cards use a 2:3 framed image above title and optional year. A bottom black shine overlays the artwork.
 - Home poster cards may include a slim inset progress bar near the bottom. Completed items omit this progress marker rather than showing 100%.
 - Continue-watching cards are wider, framed 16:9 compositions with a percentage badge over the image, a “Riprendi” pill, title and episode metadata, and a full-width progress bar.
-- Poster and continue cards share the 5px lift, brightness increase, and subtle outline hover treatment.
+- Poster and continue cards share the 5px lift, brightness increase, and subtle outline hover treatment. Their `:focus-visible` state preserves the lift and brightness while replacing the subtle outline with a 2px inset Signal Cyan ring.
 - The stylesheet includes hover styling for an `episode-card` selector, but the JavaScript does not render that class. Actual episode entries use the separate episode-row pattern.
 
 ### Episode Rows and Season Tabs
@@ -341,7 +341,7 @@ Artwork and video are clipped to their containers. Rectangular framing stays con
 - Primary buttons use the violet-to-cyan gradient with white text. Secondary buttons use a translucent white background with primary text.
 - Hover lifts buttons by 2px and raises brightness over 160ms.
 - Disabled movie actions use 50% opacity and disable pointer events while retaining the primary-button visual structure.
-- There is no implemented pressed style and no custom focus-visible rule. Keyboard focus therefore depends on browser defaults; do not describe an accent focus ring as part of the incumbent system.
+- There is no implemented pressed style. Poster and continuation cards use the incumbent 2px inset Signal Cyan `:focus-visible` ring; other controls continue to depend on browser-default keyboard focus.
 
 ### Placeholders and Empty States
 
@@ -362,7 +362,7 @@ Artwork and video are clipped to their containers. Rectangular framing stays con
 - Inter is declared but not loaded, and several requested numeric weights may not map to real font faces.
 - The root contains defined but unused elevated-background and danger tokens.
 - Completed episodes receive green visual semantics; completed movies do not.
-- Focus and pressed states have no custom visual system, while hover and selected states are explicitly styled.
+- Pressed states and focus treatment outside poster and continuation cards have no custom visual system; those two card types use the documented Signal Cyan `:focus-visible` treatment.
 - The `episode-thumb` class name is used both for the episode-row thumbnail container and for an image inside continue-watching cards. Higher-specificity image rules prevent the main positioning conflict, but the naming is not a clean reusable component boundary.
 - The navigation has responsive padding adjustments but no narrow-screen collapse or overflow behavior.
 - The spacing vocabulary is coherent in density but not a strict tokenized scale.
