@@ -1,0 +1,471 @@
+<!doctype html>
+<!--
+  THESIS: Una console da salotto rende inequivocabile ogni segnale del telecomando, senza assumere come Samsung lo rappresenti.
+  OWN-WORLD: Fondo Void, pannelli navy squadrati, controlli Electric Violet e un anello Signal Cyan ad altissimo contrasto.
+  STORY: L'utente preme un tasto, ne legge i dati completi, prova il focus nativo e conserva o esporta le osservazioni.
+  FIRST VIEWPORT: Titolo e modello precedono una coppia di pannelli; l'ultimo evento domina a sinistra, l'ambiente resta consultabile a destra.
+  FORM: Console diagnostica, scelta diretta per un brief vincolato; staging a lettura verticale con dati prima dei test. Seed non applicabile.
+-->
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TVoid — Test telecomando</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        --tv-test-bg: #05060a;
+        --tv-test-panel: #111522;
+        --tv-test-panel-strong: #171d2d;
+        --tv-test-text: #f8fafc;
+        --tv-test-soft: #d8deea;
+        --tv-test-muted: #a5adbd;
+        --tv-test-line: rgba(255, 255, 255, 0.18);
+        --tv-test-violet: #7c6dff;
+        --tv-test-cyan: #11c4e8;
+        --tv-test-success: #35e0a1;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        min-width: 0;
+        background: var(--tv-test-bg);
+      }
+
+      body {
+        min-width: 0;
+        min-height: 100vh;
+        margin: 0;
+        overflow-x: hidden;
+        background:
+          linear-gradient(135deg, rgba(124, 109, 255, 0.16), transparent 540px),
+          linear-gradient(180deg, #090b12 0, var(--tv-test-bg) 620px);
+        color: var(--tv-test-text);
+        font-size: 20px;
+        line-height: 1.5;
+      }
+
+      .tv-test-page {
+        width: 100%;
+        max-width: 1720px;
+        margin: 0 auto;
+        padding: 36px 4vw 72px;
+      }
+
+      .tv-test-header {
+        padding: 20px 0 30px;
+        border-bottom: 2px solid rgba(124, 109, 255, 0.58);
+      }
+
+      .tv-test-kicker {
+        margin: 0 0 8px;
+        color: var(--tv-test-cyan);
+        font-size: 18px;
+        font-weight: 900;
+      }
+
+      .tv-test-header h1 {
+        margin: 0;
+        font-size: 52px;
+        line-height: 1.08;
+      }
+
+      .tv-test-model {
+        margin: 12px 0 0;
+        color: var(--tv-test-soft);
+        font-size: 26px;
+        font-weight: 700;
+      }
+
+      .tv-test-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(360px, 0.65fr);
+        gap: 24px;
+        margin-top: 32px;
+      }
+
+      .tv-test-panel {
+        min-width: 0;
+        padding: 26px;
+        border: 1px solid var(--tv-test-line);
+        border-radius: 8px;
+        background: var(--tv-test-panel);
+        box-shadow: 0 22px 54px rgba(0, 0, 0, 0.34);
+      }
+
+      .tv-test-panel h2 {
+        margin: 0 0 22px;
+        color: var(--tv-test-text);
+        font-size: 30px;
+        line-height: 1.15;
+      }
+
+      .tv-test-panel h3 {
+        margin: 30px 0 12px;
+        color: var(--tv-test-violet);
+        font-size: 22px;
+      }
+
+      .tv-test-event-name {
+        display: block;
+        margin-bottom: 22px;
+        color: var(--tv-test-cyan);
+        font-size: 38px;
+        font-weight: 900;
+        line-height: 1.12;
+        overflow-wrap: break-word;
+      }
+
+      .tv-test-data-list {
+        display: grid;
+        grid-template-columns: minmax(170px, 0.42fr) minmax(0, 1fr);
+        margin: 0;
+        border-top: 1px solid var(--tv-test-line);
+      }
+
+      .tv-test-data-list dt,
+      .tv-test-data-list dd {
+        min-width: 0;
+        margin: 0;
+        padding: 9px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.09);
+      }
+
+      .tv-test-data-list dt {
+        padding-right: 18px;
+        color: var(--tv-test-muted);
+        font-weight: 800;
+        overflow-wrap: break-word;
+        word-break: break-word;
+      }
+
+      .tv-test-data-list dd {
+        color: var(--tv-test-text);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 18px;
+        overflow-wrap: break-word;
+      }
+
+      .tv-test-user-agent {
+        margin: 0;
+        color: var(--tv-test-soft);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 17px;
+        line-height: 1.65;
+        overflow-wrap: break-word;
+      }
+
+      #tv-test-environment-data dt {
+        font-size: 17px;
+      }
+
+      .tv-test-section {
+        margin-top: 44px;
+      }
+
+      .tv-test-section-heading {
+        margin-bottom: 18px;
+      }
+
+      .tv-test-section-heading h2 {
+        margin: 0;
+        font-size: 32px;
+      }
+
+      .tv-test-section-heading p {
+        max-width: 76ch;
+        margin: 8px 0 0;
+        color: var(--tv-test-muted);
+        font-size: 19px;
+      }
+
+      .tv-test-focus-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+
+      .tv-test-focus-button,
+      .tv-test-action-button {
+        border: 2px solid rgba(124, 109, 255, 0.72);
+        border-radius: 8px;
+        color: #ffffff;
+        font: inherit;
+        font-weight: 900;
+        cursor: pointer;
+      }
+
+      .tv-test-focus-button {
+        min-height: 112px;
+        padding: 20px;
+        background: var(--tv-test-panel-strong);
+        font-size: 27px;
+      }
+
+      .tv-test-action-button {
+        min-height: 64px;
+        padding: 12px 24px;
+        background: var(--tv-test-violet);
+        font-size: 19px;
+      }
+
+      .tv-test-focus-button:hover,
+      .tv-test-action-button:hover {
+        filter: brightness(1.13);
+      }
+
+      .tv-test-focus-button:active,
+      .tv-test-action-button:active {
+        transform: translateY(2px);
+      }
+
+      .tv-test-focus-button:focus,
+      .tv-test-action-button:focus,
+      .tv-test-output:focus {
+        outline: 6px solid var(--tv-test-cyan);
+        outline-offset: 5px;
+        box-shadow: 0 0 0 10px rgba(124, 109, 255, 0.78);
+      }
+
+      .tv-test-controls {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 20px;
+      }
+
+      .tv-test-status {
+        min-height: 1.5em;
+        margin: 0 0 18px;
+        color: var(--tv-test-success);
+        font-weight: 800;
+      }
+
+      .tv-test-table-wrap {
+        width: 100%;
+        overflow-x: auto;
+        border: 1px solid var(--tv-test-line);
+        border-radius: 8px;
+      }
+
+      .tv-test-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        background: rgba(17, 21, 34, 0.72);
+      }
+
+      .tv-test-table th,
+      .tv-test-table td {
+        padding: 13px 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        text-align: left;
+        overflow-wrap: break-word;
+      }
+
+      .tv-test-table th {
+        background: var(--tv-test-panel-strong);
+        color: var(--tv-test-cyan);
+        font-size: 17px;
+      }
+
+      .tv-test-table td {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 17px;
+      }
+
+      .tv-test-table th:nth-child(1),
+      .tv-test-table td:nth-child(1),
+      .tv-test-table th:nth-child(4),
+      .tv-test-table td:nth-child(4) {
+        width: 14%;
+      }
+
+      .tv-test-empty {
+        color: var(--tv-test-muted);
+        font-family: inherit !important;
+        text-align: center !important;
+      }
+
+      .tv-test-history {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+        border-top: 1px solid var(--tv-test-line);
+      }
+
+      .tv-test-history li {
+        padding: 13px 4px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        color: var(--tv-test-soft);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 18px;
+        overflow-wrap: break-word;
+      }
+
+      .tv-test-history li:first-child {
+        color: var(--tv-test-text);
+        font-weight: 800;
+      }
+
+      .tv-test-output {
+        display: none;
+        width: 100%;
+        min-height: 280px;
+        margin-top: 20px;
+        padding: 18px;
+        border: 1px solid var(--tv-test-line);
+        border-radius: 8px;
+        background: #090b12;
+        color: var(--tv-test-text);
+        font: 16px/1.55 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        resize: vertical;
+      }
+
+      .tv-test-output.tv-test-output-visible {
+        display: block;
+      }
+
+      @media (max-width: 1080px) {
+        body {
+          font-size: 18px;
+        }
+
+        .tv-test-layout {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .tv-test-focus-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 640px) {
+        .tv-test-page {
+          padding: 20px 18px 48px;
+        }
+
+        .tv-test-header h1 {
+          font-size: 38px;
+        }
+
+        .tv-test-model {
+          font-size: 21px;
+        }
+
+        .tv-test-panel {
+          padding: 20px;
+        }
+
+        .tv-test-data-list {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .tv-test-data-list dt {
+          padding-bottom: 0;
+          border-bottom: 0;
+        }
+
+        .tv-test-focus-grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .tv-test-controls {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .tv-test-table th,
+        .tv-test-table td {
+          padding: 10px 8px;
+          font-size: 14px;
+        }
+      }
+    </style>
+    <script src="/js/tv-test.js" defer></script>
+  </head>
+  <body>
+    <main class="tv-test-page">
+      <header class="tv-test-header">
+        <p class="tv-test-kicker">Diagnostica input</p>
+        <h1>TVoid — Test telecomando</h1>
+        <p class="tv-test-model">Samsung UE55TU8070UXZT</p>
+      </header>
+
+      <div class="tv-test-layout">
+        <section class="tv-test-panel" aria-labelledby="tv-test-last-title">
+          <h2 id="tv-test-last-title">Ultimo evento</h2>
+          <strong class="tv-test-event-name" id="tv-test-event-name">In attesa del primo evento</strong>
+          <dl class="tv-test-data-list" id="tv-test-event-data"></dl>
+        </section>
+
+        <section class="tv-test-panel" aria-labelledby="tv-test-environment-title">
+          <h2 id="tv-test-environment-title">Ambiente</h2>
+          <h3>User Agent</h3>
+          <p class="tv-test-user-agent" id="tv-test-user-agent"></p>
+          <h3>Informazioni disponibili</h3>
+          <dl class="tv-test-data-list" id="tv-test-environment-data"></dl>
+        </section>
+      </div>
+
+      <section class="tv-test-section" aria-labelledby="tv-test-focus-title">
+        <div class="tv-test-section-heading">
+          <h2 id="tv-test-focus-title">Test del focus</h2>
+          <p>Premi le frecce e OK/Enter: la pagina non implementa navigazione spaziale personalizzata.</p>
+        </div>
+        <div class="tv-test-focus-grid">
+          <button class="tv-test-focus-button" type="button">Pulsante 1</button>
+          <button class="tv-test-focus-button" type="button">Pulsante 2</button>
+          <button class="tv-test-focus-button" type="button">Pulsante 3</button>
+          <button class="tv-test-focus-button" type="button">Pulsante 4</button>
+          <button class="tv-test-focus-button" type="button">Pulsante 5</button>
+          <button class="tv-test-focus-button" type="button">Pulsante 6</button>
+        </div>
+      </section>
+
+      <section class="tv-test-section" aria-labelledby="tv-test-codes-title">
+        <div class="tv-test-section-heading">
+          <h2 id="tv-test-codes-title">KeyCode osservati</h2>
+          <p>La tabella nasce dagli eventi realmente ricevuti e si aggiorna a ogni pressione.</p>
+        </div>
+        <div class="tv-test-table-wrap">
+          <table class="tv-test-table">
+            <thead>
+              <tr>
+                <th scope="col">keyCode</th>
+                <th scope="col">event.key</th>
+                <th scope="col">Nome normalizzato</th>
+                <th scope="col">Conteggio</th>
+              </tr>
+            </thead>
+            <tbody id="tv-test-keycode-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="tv-test-section" aria-labelledby="tv-test-history-title">
+        <div class="tv-test-section-heading">
+          <h2 id="tv-test-history-title">Registro eventi</h2>
+          <p>Ultimi 30 eventi, dal più recente al più vecchio. Il registro resta disponibile dopo il refresh.</p>
+        </div>
+        <div class="tv-test-controls">
+          <button class="tv-test-action-button" id="tv-test-clear" type="button">Cancella registro</button>
+          <button class="tv-test-action-button" id="tv-test-copy" type="button">Copia risultati</button>
+          <button class="tv-test-action-button" id="tv-test-export" type="button">Esporta JSON</button>
+        </div>
+        <p class="tv-test-status" id="tv-test-status" aria-live="polite"></p>
+        <ol class="tv-test-history" id="tv-test-history"></ol>
+        <textarea
+          class="tv-test-output"
+          id="tv-test-output"
+          aria-label="Risultati diagnostici selezionabili"
+          readonly
+        ></textarea>
+      </section>
+    </main>
+  </body>
+</html>
