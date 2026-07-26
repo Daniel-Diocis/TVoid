@@ -6,3 +6,5 @@ data/*.db-*
 .DS_Store
 media/movies/*
 media/series/*
+# File multimediali locali
+media/
