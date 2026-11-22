@@ -96,7 +96,7 @@ a {
 }
 
 .nav a:hover,
-.nav a.active {
+.nav a[aria-current] {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text);
 }
@@ -152,7 +152,7 @@ a {
 }
 
 .hero h1,
-.series-info h1,
+.detail-info h1,
 .watch-meta h1,
 .content-section h1 {
   margin: 0;
@@ -180,10 +180,6 @@ a {
 
 .content-section {
   margin-top: 3rem;
-}
-
-.library-heading {
-  margin-top: 1rem;
 }
 
 .section-heading,
@@ -438,7 +434,7 @@ a {
   background: rgba(255, 255, 255, 0.035);
 }
 
-.series-hero {
+.detail-hero {
   position: relative;
   display: grid;
   grid-template-columns: minmax(11rem, 16rem) minmax(0, 1fr);
@@ -454,7 +450,7 @@ a {
   box-shadow: var(--shadow);
 }
 
-.series-poster {
+.detail-poster {
   position: relative;
   width: 100%;
   aspect-ratio: 2 / 3;
@@ -467,7 +463,7 @@ a {
   box-shadow: 0 22px 48px rgba(0, 0, 0, 0.34);
 }
 
-.series-poster img {
+.detail-poster img {
   position: absolute;
   inset: 0;
   width: 100%;
@@ -475,7 +471,7 @@ a {
   object-fit: cover;
 }
 
-.series-poster-placeholder {
+.detail-poster-placeholder {
   position: absolute;
   inset: 0;
   display: grid;
@@ -487,17 +483,17 @@ a {
   overflow-wrap: anywhere;
 }
 
-.series-info {
+.detail-info {
   min-width: 0;
 }
 
-.series-info p {
+.detail-info p {
   max-width: 56rem;
   color: var(--soft);
   line-height: 1.7;
 }
 
-.series-meta {
+.detail-meta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.55rem;
@@ -507,18 +503,18 @@ a {
   font-weight: 750;
 }
 
-.series-meta span {
+.detail-meta span {
   display: inline-flex;
   align-items: center;
 }
 
-.series-meta span:not(:last-child)::after {
+.detail-meta span:not(:last-child)::after {
   content: "•";
   margin-left: 0.55rem;
   color: rgba(255, 255, 255, 0.28);
 }
 
-.series-primary-action {
+.detail-action {
   margin-top: 1.2rem;
 }
 
@@ -583,10 +579,17 @@ a {
   border-color: rgba(255, 255, 255, 0.2);
 }
 
-.season-tab.active {
+.season-tab[aria-selected="true"] {
   border-color: transparent;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: #fff;
+}
+
+.season-tab:focus-visible,
+.episode-row:focus-visible,
+.episodes-panel:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: -3px;
 }
 
 .episodes-panel {
@@ -796,11 +799,28 @@ a {
   box-shadow: var(--shadow);
 }
 
+video[hidden] {
+  display: none;
+}
+
 video {
   display: block;
   width: 100%;
   max-height: calc(100vh - 13.5rem);
   background: #000;
+}
+
+.playback-error {
+  padding: clamp(1rem, 4vw, 3rem);
+}
+
+.playback-error h2 {
+  margin: 0;
+}
+
+.playback-error p {
+  max-width: 60ch;
+  color: var(--muted);
 }
 
 .button {
@@ -833,6 +853,25 @@ video {
 .button.secondary {
   background: rgba(255, 255, 255, 0.08);
   color: var(--text);
+}
+
+.library-update:not([hidden]) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-block: 1rem;
+  color: var(--muted);
+}
+
+.library-update button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.library-update button:disabled {
+  cursor: wait;
+  color: var(--muted);
 }
 
 .button.disabled {
@@ -872,7 +911,7 @@ video {
     grid-auto-columns: minmax(18rem, 22rem);
   }
 
-  .series-hero {
+  .detail-hero {
     grid-template-columns: minmax(8rem, 12rem) minmax(0, 1fr);
   }
 
@@ -961,11 +1000,11 @@ video {
     gap: 1rem;
   }
 
-  .series-hero {
+  .detail-hero {
     grid-template-columns: 1fr;
   }
 
-  .series-poster {
+  .detail-poster {
     max-width: 13rem;
   }
 

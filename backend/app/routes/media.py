@@ -31,6 +31,7 @@ def _progress_payload(row) -> dict:
 def _media_item_payload(row) -> dict:
     return {
         "id": row["id"],
+        "category": row["category"],
         "title": row["title"],
         "description": row["description"] or "",
         "year": row["year"],
@@ -38,37 +39,42 @@ def _media_item_payload(row) -> dict:
     }
 
 
+def _episodes_in_progress(connection, media_id: int | None = None):
+    return connection.execute(
+        """
+        SELECT
+            e.id AS episode_id,
+            e.media_item_id AS media_id,
+            e.title AS episode_title,
+            e.season_number,
+            e.episode_number,
+            m.title AS series_title,
+            wp.current_time_seconds,
+            COALESCE(wp.duration_seconds, e.duration_seconds) AS duration_seconds,
+            wp.completed,
+            wp.updated_at
+        FROM watch_progress wp
+        JOIN episodes e ON e.id = wp.episode_id
+        JOIN media_items m ON m.id = e.media_item_id
+        WHERE wp.user_id = ?
+          AND wp.current_time_seconds > 0
+          AND wp.completed = 0
+          AND (
+            COALESCE(wp.duration_seconds, e.duration_seconds) IS NULL
+            OR COALESCE(wp.duration_seconds, e.duration_seconds) <= 0
+            OR wp.current_time_seconds / COALESCE(wp.duration_seconds, e.duration_seconds) < ?
+          )
+          AND (? IS NULL OR e.media_item_id = ?)
+        ORDER BY wp.updated_at DESC, e.id ASC
+        """,
+        (DEFAULT_USER_ID, COMPLETION_THRESHOLD, media_id, media_id),
+    )
+
+
 @router.get("/home")
 def get_home() -> dict:
     with get_connection() as connection:
-        episode_continue_rows = connection.execute(
-            """
-            SELECT
-                e.id AS episode_id,
-                e.media_item_id AS media_id,
-                e.title AS episode_title,
-                e.season_number,
-                e.episode_number,
-                m.title AS series_title,
-                wp.current_time_seconds,
-                COALESCE(wp.duration_seconds, e.duration_seconds) AS duration_seconds,
-                wp.completed,
-                wp.updated_at
-            FROM watch_progress wp
-            JOIN episodes e ON e.id = wp.episode_id
-            JOIN media_items m ON m.id = e.media_item_id
-            WHERE wp.user_id = ?
-              AND wp.current_time_seconds > 0
-              AND wp.completed = 0
-              AND (
-                COALESCE(wp.duration_seconds, e.duration_seconds) IS NULL
-                OR COALESCE(wp.duration_seconds, e.duration_seconds) <= 0
-                OR wp.current_time_seconds / COALESCE(wp.duration_seconds, e.duration_seconds) < ?
-              )
-            ORDER BY wp.updated_at DESC
-            """,
-            (DEFAULT_USER_ID, COMPLETION_THRESHOLD),
-        ).fetchall()
+        episode_continue_rows = _episodes_in_progress(connection).fetchall()
         movie_continue_rows = connection.execute(
             """
             SELECT
@@ -96,7 +102,7 @@ def get_home() -> dict:
         ).fetchall()
         series_rows = connection.execute(
             """
-            SELECT id, title, description, year
+            SELECT id, category, title, description, year
             FROM media_items
             WHERE category = 'series'
             ORDER BY title COLLATE NOCASE
@@ -104,10 +110,10 @@ def get_home() -> dict:
         ).fetchall()
         recent_rows = connection.execute(
             """
-            SELECT id, title, description, year
+            SELECT id, category, title, description, year
             FROM media_items
-            WHERE category = 'series'
-            ORDER BY created_at DESC
+            WHERE category IN ('series', 'movies')
+            ORDER BY created_at DESC, id DESC
             LIMIT 12
             """
         ).fetchall()
@@ -115,6 +121,7 @@ def get_home() -> dict:
             """
             SELECT
                 m.id,
+                m.category,
                 m.title,
                 m.description,
                 m.year,
@@ -197,7 +204,7 @@ def list_media(category: str = "series") -> list[dict]:
     with get_connection() as connection:
         rows = connection.execute(
             """
-            SELECT id, title, description, year
+            SELECT id, category, title, description, year
             FROM media_items
             WHERE category = ?
             ORDER BY title COLLATE NOCASE
@@ -222,6 +229,7 @@ def get_media(media_id: int) -> dict:
         if not media:
             raise HTTPException(status_code=404, detail="Media item not found")
 
+        resume = _episodes_in_progress(connection, media_id).fetchone()
         seasons = connection.execute(
             """
             SELECT id, season_number
@@ -273,6 +281,7 @@ def get_media(media_id: int) -> dict:
         "description": media["description"] or "",
         "year": media["year"],
         "poster_url": f"/api/images/poster/{media['id']}",
+        "resume_episode_id": resume["episode_id"] if resume else None,
         "seasons": [
             {
                 "id": season["id"],

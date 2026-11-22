@@ -81,6 +81,12 @@ Ogni film può avere un file `metadata.json`:
 
 Se `metadata.json` manca o non è valido, TVoid usa il nome della cartella come titolo, descrizione vuota, anno non impostato e categoria `movies`.
 
+## Aggiornamento della libreria
+
+Home, Film e Serie TV leggono il catalogo salvato in SQLite. Le voci Film e Serie TV aprono la stessa pagina catalogo filtrata per categoria. Al primo accesso, se il catalogo deve ancora essere indicizzato, TVoid avvia la scansione in background. Anche una prima scansione senza titoli viene registrata.
+
+Dopo aver aggiunto o modificato file, usa **Aggiorna libreria** dalla Home o da uno dei due cataloghi. Puoi aprire un titolo e guardarlo durante la scansione. I metadati illeggibili vengono segnalati nei log e il titolo interessato usa il nome della cartella.
+
 ## Thumbnail automatiche
 
 Durante lo scan della libreria, TVoid genera automaticamente le thumbnail degli episodi MP4 con FFmpeg e le salva in:
@@ -98,6 +104,10 @@ Per i film, TVoid usa `media/movies/Nome Film/thumbnail.jpg` se esiste. Se manca
 ## Progresso film
 
 Il progresso dei film è salvato separatamente da quello degli episodi nella tabella `movie_progress`, sempre con `user_id = 1`. Il player salva durante la riproduzione, su pausa, fine video e uscita dalla pagina. Quando il rapporto `current_time_seconds / duration_seconds` arriva almeno al 90%, il film viene segnato come completato e non appare più in “Continua a guardare”.
+
+Per film ed episodi, il player ottiene un identificativo da `POST /api/playback-session` e invia `playback_session` e `save_sequence` con ogni salvataggio. La sequenza cresce a ogni azione, anche quando si torna indietro nel video. Il server risponde con `status: "ignored"` e la posizione già registrata se riceve una richiesta superata o duplicata.
+
+Se lo stesso titolo è aperto in due player, la sessione aperta più di recente ha la precedenza dal suo primo salvataggio. Per i client precedenti che inviano soltanto posizione e durata, il server usa l’ordine di ricezione.
 
 ## Avvio con Docker Compose
 
@@ -201,6 +211,7 @@ media/series/From/season1/
 - `GET /api/media/{media_id}`
 - `GET /api/movies/{media_id}`
 - `GET /api/episodes/{episode_id}`
+- `POST /api/playback-session`
 - `GET /api/progress/{episode_id}`
 - `POST /api/progress/{episode_id}`
 - `GET /api/movie-progress/{movie_file_id}`

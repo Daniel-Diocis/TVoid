@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="it">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Catalogo - TVoid</title>
+    <link rel="stylesheet" href="/css/style.css" />
+    <script src="/js/api.js" defer></script>
+    <script src="/js/ui.js" defer></script>
+    <script src="/js/library.js" defer></script>
+    <script src="/js/catalog.js" defer></script>
+  </head>
+  <body>
+    <header class="topbar"></header>
+    <main class="page">
+      <h1 id="catalog-title">Catalogo</h1>
+      <div class="library-update">
+        <button class="button secondary" id="refresh-library" type="button" disabled>Aggiorna libreria</button>
+        <span id="library-status" role="status"></span>
+      </div>
+      <div id="catalog-content"></div>
+    </main>
+  </body>
+</html>

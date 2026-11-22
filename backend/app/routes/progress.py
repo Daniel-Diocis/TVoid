@@ -53,56 +53,76 @@ def get_progress(episode_id: int) -> dict:
     }
 
 
-@router.post("/progress/{episode_id}")
-def save_progress(episode_id: int, payload: ProgressPayload) -> dict:
+def _next_session(connection) -> int:
+    connection.execute("UPDATE playback_counter SET last_session = last_session + 1 WHERE id = 1")
+    return connection.execute("SELECT last_session FROM playback_counter WHERE id = 1").fetchone()[0]
+
+
+@router.post("/playback-session")
+def start_playback_session() -> dict:
     with get_connection() as connection:
-        episode = connection.execute(
-            "SELECT id FROM episodes WHERE id = ?",
-            (episode_id,),
-        ).fetchone()
-        if not episode:
-            raise HTTPException(status_code=404, detail="Episode not found")
+        return {"playback_session": _next_session(connection)}
 
-        current_time = payload.current_time_seconds
-        duration = payload.duration_seconds
-        completed = 1 if _is_completed(current_time, duration) else 0
-        progress_percent = _progress_percent(current_time, duration)
-        now = utc_now()
 
-        connection.execute(
-            """
-            INSERT INTO watch_progress (
-                user_id, episode_id, current_time_seconds, duration_seconds, completed, updated_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT(user_id, episode_id) DO UPDATE SET
+def _save_progress(target_id: int, payload: ProgressPayload, *, movie: bool) -> dict:
+    if (payload.playback_session is None) != (payload.save_sequence is None):
+        raise HTTPException(status_code=422, detail="playback_session and save_sequence must be supplied together")
+    if movie:
+        table, column, media_table, label = "movie_progress", "movie_file_id", "movie_files", "Movie file"
+    else:
+        table, column, media_table, label = "watch_progress", "episode_id", "episodes", "Episode"
+
+    with get_connection() as connection:
+        connection.execute("BEGIN IMMEDIATE")
+        if not connection.execute(f"SELECT 1 FROM {media_table} WHERE id = ?", (target_id,)).fetchone():
+            raise HTTPException(status_code=404, detail=f"{label} not found")
+
+        session = payload.playback_session
+        if session is None:
+            # Older API clients provide no ordering information. Treat receipt as a new write.
+            session = _next_session(connection)
+        elif session > connection.execute("SELECT last_session FROM playback_counter WHERE id = 1").fetchone()[0]:
+            raise HTTPException(status_code=422, detail="Unknown playback session")
+
+        write = connection.execute(
+            f"""
+            INSERT INTO {table} (
+                user_id, {column}, current_time_seconds, duration_seconds, completed, updated_at,
+                playback_session, save_sequence
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT(user_id, {column}) DO UPDATE SET
                 current_time_seconds = excluded.current_time_seconds,
                 duration_seconds = excluded.duration_seconds,
                 completed = excluded.completed,
-                updated_at = excluded.updated_at
+                updated_at = excluded.updated_at,
+                playback_session = excluded.playback_session,
+                save_sequence = excluded.save_sequence
+            WHERE (excluded.playback_session, excluded.save_sequence) > ({table}.playback_session, {table}.save_sequence)
             """,
-            (DEFAULT_USER_ID, episode_id, current_time, duration, completed, now),
+            (DEFAULT_USER_ID, target_id, payload.current_time_seconds, payload.duration_seconds,
+             _is_completed(payload.current_time_seconds, payload.duration_seconds), utc_now(),
+             session, payload.save_sequence or 0),
         )
-        connection.commit()
+        saved = connection.execute(
+            f"SELECT current_time_seconds, duration_seconds, completed FROM {table} WHERE user_id = ? AND {column} = ?",
+            (DEFAULT_USER_ID, target_id),
+        ).fetchone()
 
-    logger.info(
-        "Saved progress: user_id=%s episode_id=%s current_time=%.2f duration=%s percent=%s completed=%s",
-        DEFAULT_USER_ID,
-        episode_id,
-        current_time,
-        f"{duration:.2f}" if duration is not None else "unknown",
-        progress_percent,
-        bool(completed),
-    )
-
+    status = "ok" if write.rowcount else "ignored"
+    logger.info("Progress %s: %s=%s position=%.2f", status, column, target_id, saved["current_time_seconds"])
     return {
-        "status": "ok",
-        "episode_id": episode_id,
-        "current_time_seconds": current_time,
-        "duration_seconds": duration,
-        "completed": bool(completed),
-        "progress_percent": progress_percent,
+        "status": status,
+        column: target_id,
+        "current_time_seconds": saved["current_time_seconds"],
+        "duration_seconds": saved["duration_seconds"],
+        "completed": bool(saved["completed"]),
+        "progress_percent": _progress_percent(saved["current_time_seconds"], saved["duration_seconds"]),
     }
+
+
+@router.post("/progress/{episode_id}")
+def save_progress(episode_id: int, payload: ProgressPayload) -> dict:
+    return _save_progress(episode_id, payload, movie=False)
 
 
 @router.get("/movie-progress/{movie_file_id}")
@@ -139,51 +159,4 @@ def get_movie_progress(movie_file_id: int) -> dict:
 
 @router.post("/movie-progress/{movie_file_id}")
 def save_movie_progress(movie_file_id: int, payload: ProgressPayload) -> dict:
-    with get_connection() as connection:
-        movie_file = connection.execute(
-            "SELECT id FROM movie_files WHERE id = ?",
-            (movie_file_id,),
-        ).fetchone()
-        if not movie_file:
-            raise HTTPException(status_code=404, detail="Movie file not found")
-
-        current_time = payload.current_time_seconds
-        duration = payload.duration_seconds
-        completed = 1 if _is_completed(current_time, duration) else 0
-        progress_percent = _progress_percent(current_time, duration)
-        now = utc_now()
-
-        connection.execute(
-            """
-            INSERT INTO movie_progress (
-                user_id, movie_file_id, current_time_seconds, duration_seconds, completed, updated_at
-            )
-            VALUES (?, ?, ?, ?, ?, ?)
-            ON CONFLICT(user_id, movie_file_id) DO UPDATE SET
-                current_time_seconds = excluded.current_time_seconds,
-                duration_seconds = excluded.duration_seconds,
-                completed = excluded.completed,
-                updated_at = excluded.updated_at
-            """,
-            (DEFAULT_USER_ID, movie_file_id, current_time, duration, completed, now),
-        )
-        connection.commit()
-
-    logger.info(
-        "Saved movie progress: user_id=%s movie_file_id=%s current_time=%.2f duration=%s percent=%s completed=%s",
-        DEFAULT_USER_ID,
-        movie_file_id,
-        current_time,
-        f"{duration:.2f}" if duration is not None else "unknown",
-        progress_percent,
-        bool(completed),
-    )
-
-    return {
-        "status": "ok",
-        "movie_file_id": movie_file_id,
-        "current_time_seconds": current_time,
-        "duration_seconds": duration,
-        "completed": bool(completed),
-        "progress_percent": progress_percent,
-    }
+    return _save_progress(movie_file_id, payload, movie=True)

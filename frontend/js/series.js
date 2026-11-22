@@ -1,24 +1,3 @@
-const content = document.querySelector("#series-content");
-const selectedId = qs("id");
-let currentSeriesDetail = null;
-let activeSeasonId = null;
-
-function listCard(item) {
-  return `
-    <a class="poster-card" href="/series.html?id=${item.id}">
-      <div class="poster-frame">
-        <div class="placeholder">${escapeHTML(item.title)}</div>
-        <img src="${item.poster_url}" alt="" loading="lazy" data-fallback />
-        <div class="poster-shine"></div>
-      </div>
-      <div class="poster-copy">
-        <div class="card-title">${escapeHTML(item.title)}</div>
-        ${item.year ? `<div class="card-meta">${item.year}</div>` : ""}
-      </div>
-    </a>
-  `;
-}
-
 function clampPercent(value) {
   const percent = Number(value || 0);
   return Math.min(100, Math.max(0, Math.round(percent)));
@@ -42,6 +21,13 @@ function isStarted(episode) {
 
 function watchTarget(item) {
   const episodes = allEpisodes(item);
+  const resumeEpisode = episodes.find((episode) => episode.id === item.resume_episode_id);
+  if (resumeEpisode) {
+    return {
+      episode: resumeEpisode,
+      label: `Riprendi ${mediaCode(resumeEpisode.season_number, resumeEpisode.episode_number)}`,
+    };
+  }
   const firstEpisode = episodes[0];
   const firstIncomplete = episodes.find((episode) => !isCompleted(episode));
 
@@ -58,17 +44,8 @@ function watchTarget(item) {
 
   return {
     episode: firstIncomplete,
-    label: isStarted(firstIncomplete) ? "Riprendi" : "Guarda",
+    label: "Guarda",
   };
-}
-
-function seasonHasIncompleteEpisodes(season) {
-  return season.episodes.some((episode) => !isCompleted(episode));
-}
-
-function defaultSeasonId(item) {
-  const season = item.seasons.find(seasonHasIncompleteEpisodes) || item.seasons[0];
-  return season?.id ?? null;
 }
 
 function seasonStats(item) {
@@ -88,7 +65,7 @@ function episodeRow(episode) {
   const status = completed ? "✓ Completato" : started ? "In corso" : "";
 
   return `
-    <a class="episode-row ${completed ? "completed" : ""} ${started ? "in-progress" : ""}" href="/watch.html?id=${episode.id}">
+    <a class="episode-row ${completed ? "completed" : ""} ${started ? "in-progress" : ""}" href="${watchUrl("series", episode.id)}">
       <div class="episode-thumb">
         <div class="episode-thumb-placeholder">${code}</div>
         <img class="episode-thumb-img" src="${episode.thumbnail_url}" alt="${escapeHTML(episode.title)}" loading="lazy" data-fallback />
@@ -123,10 +100,13 @@ function renderSeasonTabs(item) {
         .map(
           (season) => `
             <button
-              class="season-tab ${season.id === activeSeasonId ? "active" : ""}"
+              class="season-tab"
               type="button"
-              data-season-id="${season.id}"
-              aria-selected="${season.id === activeSeasonId ? "true" : "false"}"
+              role="tab"
+              id="season-tab-${season.id}"
+              aria-controls="season-panel-${season.id}"
+              aria-selected="false"
+              tabindex="-1"
             >
               Stagione ${season.season_number}
             </button>
@@ -134,31 +114,72 @@ function renderSeasonTabs(item) {
         )
         .join("")}
     </div>
+    ${item.seasons.map((season) => `
+      <section class="episodes-panel" id="season-panel-${season.id}" role="tabpanel"
+        aria-labelledby="season-tab-${season.id}" ${season.episodes.length ? "" : 'tabindex="0"'} hidden></section>
+    `).join("")}
   `;
 }
 
-function renderEpisodeList(item) {
-  const season = item.seasons.find((season) => season.id === activeSeasonId) || item.seasons[0];
-  if (!season) {
-    return emptyState("Nessuna stagione rilevata.");
-  }
-
+function renderEpisodeList(season) {
   const episodes = season.episodes.length
     ? season.episodes.map(episodeRow).join("")
     : emptyState("Questa stagione non contiene episodi MP4 validi.");
 
   return `
-    <section class="episodes-panel">
-      <div class="season-heading">
-        <h2>Stagione ${season.season_number}</h2>
-        <span>${season.episodes.length} episodi</span>
-      </div>
-      <div class="episode-list">${episodes}</div>
-    </section>
+    <div class="season-heading">
+      <h2>Stagione ${season.season_number}</h2>
+      <span>${season.episodes.length} ${season.episodes.length === 1 ? "episodio" : "episodi"}</span>
+    </div>
+    <div class="episode-list">${episodes}</div>
   `;
 }
 
-function renderSeriesDetailView(item) {
+function installSeasonTabs(content, seasons, targetEpisode) {
+  const tabs = Array.from(content.querySelectorAll('[role="tab"]'));
+  const panels = tabs.map((tab) => document.getElementById(tab.getAttribute("aria-controls")));
+
+  function select(index) {
+    if (!panels[index].hidden) return;
+    tabs.forEach((tab, position) => {
+      const active = position === index;
+      tab.tabIndex = active ? 0 : -1;
+      tab.setAttribute("aria-selected", String(active));
+      panels[position].hidden = !active;
+    });
+    const panel = panels[index];
+    if (!panel.firstElementChild) {
+      panel.innerHTML = renderEpisodeList(seasons[index]);
+      installImageFallbacks(panel);
+    }
+  }
+
+  tabs.forEach((tab, index) => {
+    tab.addEventListener("click", () => {
+      select(index);
+      tab.focus();
+    });
+    tab.addEventListener("keydown", (event) => {
+      if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+      let next;
+      switch (event.key) {
+        case "ArrowLeft": next = (index - 1 + tabs.length) % tabs.length; break;
+        case "ArrowRight": next = (index + 1) % tabs.length; break;
+        case "Home": next = 0; break;
+        case "End": next = tabs.length - 1; break;
+        default: return;
+      }
+      event.preventDefault();
+      select(next);
+      tabs[next].focus();
+    });
+  });
+
+  const initialIndex = seasons.findIndex((season) => season.season_number === targetEpisode?.season_number);
+  select(Math.max(0, initialIndex));
+}
+
+function renderSeriesDetailView(item, content) {
   const target = watchTarget(item);
   const stats = seasonStats(item);
   const meta = [
@@ -166,78 +187,18 @@ function renderSeriesDetailView(item) {
     "Serie TV",
     `${stats.seasonCount} ${stats.seasonCount === 1 ? "stagione" : "stagioni"}`,
     `${stats.episodeCount} episodi`,
-  ].filter(Boolean);
+  ];
 
+  const action = target
+    ? `<a class="button primary detail-action" href="${watchUrl("series", target.episode.id)}">${target.label}</a>`
+    : "";
   content.innerHTML = `
-    <section class="series-hero">
-      <div class="series-poster">
-        <div class="series-poster-placeholder">${escapeHTML(item.title)}</div>
-        <img src="${item.poster_url}" alt="" data-fallback />
-      </div>
-      <div class="series-info">
-        <p class="eyebrow">Dettaglio serie</p>
-        <h1>${escapeHTML(item.title)}</h1>
-        <div class="series-meta">${meta.map((value) => `<span>${escapeHTML(value)}</span>`).join("")}</div>
-        <p>${escapeHTML(item.description || "Nessuna descrizione disponibile.")}</p>
-        ${
-          target
-            ? `<a class="button primary series-primary-action" href="/watch.html?id=${target.episode.id}">${target.label}</a>`
-            : ""
-        }
-      </div>
-    </section>
-    ${item.seasons.length ? renderSeasonTabs(item) : ""}
-    ${renderEpisodeList(item)}
+    ${detailHero(item, meta, "Nessuna descrizione disponibile.", action)}
+    ${item.seasons.length ? renderSeasonTabs(item) : emptyState("Nessuna stagione rilevata.")}
   `;
 
   installImageFallbacks(content);
+  if (item.seasons.length) installSeasonTabs(content, item.seasons, target?.episode);
 }
 
-async function renderSeriesList() {
-  content.innerHTML = emptyState("Scansione libreria...");
-  await TVoidAPI.scan();
-  const items = await TVoidAPI.media("series");
-  content.innerHTML = items.length
-    ? `
-      <section class="content-section library-heading">
-        <div class="section-heading">
-          <h1>Serie TV</h1>
-        </div>
-        <div class="poster-grid library-grid">${items.map(listCard).join("")}</div>
-      </section>
-    `
-    : emptyState("Nessuna serie trovata in media/series.");
-  installImageFallbacks(content);
-}
-
-async function renderSeriesDetail(id) {
-  content.innerHTML = emptyState("Caricamento serie...");
-  currentSeriesDetail = await TVoidAPI.mediaDetail(id);
-  activeSeasonId = defaultSeasonId(currentSeriesDetail);
-  renderSeriesDetailView(currentSeriesDetail);
-}
-
-content.addEventListener("click", (event) => {
-  const tab = event.target.closest("[data-season-id]");
-  if (!tab || !currentSeriesDetail) {
-    return;
-  }
-
-  activeSeasonId = Number(tab.dataset.seasonId);
-  renderSeriesDetailView(currentSeriesDetail);
-});
-
-async function bootSeries() {
-  try {
-    if (selectedId) {
-      await renderSeriesDetail(selectedId);
-    } else {
-      await renderSeriesList();
-    }
-  } catch (error) {
-    content.innerHTML = emptyState("Non riesco a caricare questa pagina.");
-    console.error(error);
-  }
-}
-
-bootSeries();
+openDetail("series", (id) => TVoidAPI.mediaDetail(id), renderSeriesDetailView);

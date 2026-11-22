@@ -30,12 +30,23 @@ def _load_metadata(media_dir: Path, category: str) -> dict[str, Any]:
         "poster": "poster.jpg",
     }
 
-    if not metadata_path.exists():
-        return fallback
-
     try:
-        data = json.loads(metadata_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+        data = json.loads(metadata_path.read_text(encoding="utf-8-sig"))
+        if not isinstance(data, dict):
+            raise ValueError("expected a JSON object")
+        for key in ("title", "description", "poster"):
+            value = data.get(key)
+            if value is not None:
+                if not isinstance(value, str) or "\0" in value:
+                    raise ValueError(f"invalid {key}")
+                value.encode("utf-8")
+        year = data.get("year")
+        if isinstance(year, int) and not -(2**63) <= year < 2**63:
+            raise ValueError("year out of range")
+    except FileNotFoundError:
+        return fallback
+    except (OSError, ValueError, RecursionError) as error:
+        logger.warning("Ignoring %s: %s", metadata_path, error)
         return fallback
 
     return {
@@ -131,16 +142,14 @@ def _movie_thumbnail_ref(movie_dir: Path, movie_path: Path) -> str | None:
 
 def _poster_ref(media_dir: Path, metadata: dict[str, Any]) -> str | None:
     poster_name = metadata.get("poster") or "poster.jpg"
-    poster = (media_dir / poster_name).resolve()
-    media_root = media_dir.resolve()
-
     try:
-        poster.relative_to(media_root)
-    except ValueError:
-        poster = media_dir / "poster.jpg"
-
-    if poster.exists() and poster.is_file():
-        return to_media_ref(poster)
+        poster = (media_dir / poster_name).resolve()
+        if not poster.is_relative_to(media_dir.resolve()):
+            poster = media_dir / "poster.jpg"
+        if poster.is_file():
+            return to_media_ref(poster)
+    except (OSError, RuntimeError):
+        logger.warning("Ignoring unreadable poster in %s", media_dir)
     return None
 
 
@@ -216,15 +225,14 @@ def _upsert_episode(
     connection: Connection,
     media_item_id: int,
     season_id: int,
-    series_dir: Path,
     episode_path: Path,
     season_number: int,
     episode_number: int,
     title: str,
+    thumbnail_ref: str | None,
 ) -> None:
     now = utc_now()
     file_ref = to_media_ref(episode_path)
-    thumbnail_ref = _thumbnail_ref(series_dir, episode_path, season_number, episode_number)
 
     existing = connection.execute(
         """
@@ -310,13 +318,12 @@ def _movie_candidates(movie_dir: Path) -> list[Path]:
 def _upsert_movie_file(
     connection: Connection,
     media_item_id: int,
-    movie_dir: Path,
     movie_path: Path,
     title: str,
+    thumbnail_ref: str | None,
 ) -> None:
     now = utc_now()
     file_ref = to_media_ref(movie_path)
-    thumbnail_ref = _movie_thumbnail_ref(movie_dir, movie_path)
 
     existing = connection.execute(
         """
@@ -353,10 +360,9 @@ def _upsert_movie_file(
     )
 
 
-def _scan_movies(connection: Connection) -> int:
+def _discover_movies():
     MOVIES_ROOT.mkdir(parents=True, exist_ok=True)
 
-    movies_found = 0
     for movie_dir in sorted(MOVIES_ROOT.iterdir(), key=lambda path: path.name.lower()):
         if not movie_dir.is_dir():
             continue
@@ -373,17 +379,25 @@ def _scan_movies(connection: Connection) -> int:
             )
 
         metadata = _load_metadata(movie_dir, "movies")
-        media_item_id = _upsert_media_item(connection, movie_dir, metadata)
-        _upsert_movie_file(
-            connection,
-            media_item_id,
-            movie_dir,
-            candidates[0],
-            metadata["title"],
-        )
-        movies_found += 1
+        movie_path = candidates[0]
+        yield movie_dir, metadata, movie_path, _movie_thumbnail_ref(movie_dir, movie_path)
 
-    return movies_found
+
+def _discover_seasons(series_dir: Path):
+    for season_dir in sorted(series_dir.iterdir(), key=lambda path: path.name.lower()):
+        season_match = SEASON_RE.match(season_dir.name)
+        if not season_match or not season_dir.is_dir():
+            continue
+        season_number = int(season_match.group("number"))
+        episodes = []
+        for path in sorted(season_dir.glob("*.mp4"), key=lambda path: path.name.lower()):
+            match = EPISODE_RE.match(path.name)
+            if not match or int(match.group("season")) != season_number:
+                continue
+            number = int(match.group("episode"))
+            thumbnail = _thumbnail_ref(series_dir, path, season_number, number)
+            episodes.append((path, number, match.group("title").strip(), thumbnail))
+        yield season_dir, season_number, episodes
 
 
 def _video_ref_exists(value: str | None) -> bool:
@@ -471,64 +485,34 @@ def _cleanup_orphans(
 def scan_series_library(cleanup: bool = False) -> dict[str, int | str | bool]:
     SERIES_ROOT.mkdir(parents=True, exist_ok=True)
 
-    series_found = 0
     seasons_found = 0
     episodes_found = 0
-    movies_found = 0
     orphan_episodes_removed = 0
     orphan_movies_removed = 0
     empty_seasons_removed = 0
 
+    # Discover files and generate artwork before taking SQLite's write lock.
+    series = [
+        (folder, _load_metadata(folder, "series"), list(_discover_seasons(folder)))
+        for folder in sorted(SERIES_ROOT.iterdir(), key=lambda path: path.name.lower())
+        if folder.is_dir()
+    ]
+    movies = list(_discover_movies())
+
     with get_connection() as connection:
-        for series_dir in sorted(SERIES_ROOT.iterdir(), key=lambda path: path.name.lower()):
-            if not series_dir.is_dir():
-                continue
-
-            series_found += 1
-            metadata = _load_metadata(series_dir, "series")
-            media_item_id = _upsert_media_item(connection, series_dir, metadata)
-
-            for season_dir in sorted(series_dir.iterdir(), key=lambda path: path.name.lower()):
-                if not season_dir.is_dir():
-                    continue
-
-                season_match = SEASON_RE.match(season_dir.name)
-                if not season_match:
-                    continue
-
-                season_number = int(season_match.group("number"))
+        for folder, metadata, seasons in series:
+            media_id = _upsert_media_item(connection, folder, metadata)
+            for season_dir, season_number, episodes in seasons:
+                season_id = _upsert_season(connection, media_id, season_number, season_dir)
                 seasons_found += 1
-                season_id = _upsert_season(
-                    connection,
-                    media_item_id,
-                    season_number,
-                    season_dir,
-                )
-
-                for episode_path in sorted(season_dir.glob("*.mp4"), key=lambda path: path.name.lower()):
-                    episode_match = EPISODE_RE.match(episode_path.name)
-                    if not episode_match:
-                        continue
-
-                    parsed_season = int(episode_match.group("season"))
-                    episode_number = int(episode_match.group("episode"))
-                    if parsed_season != season_number:
-                        continue
-
-                    title = episode_match.group("title").strip()
-                    _upsert_episode(
-                        connection,
-                        media_item_id,
-                        season_id,
-                        series_dir,
-                        episode_path,
-                        season_number,
-                        episode_number,
-                        title,
-                    )
+                for path, number, title, thumbnail in episodes:
+                    _upsert_episode(connection, media_id, season_id, path, season_number, number, title, thumbnail)
                     episodes_found += 1
 
-        movies_found = _scan_movies(connection)
+        for folder, metadata, path, thumbnail in movies:
+            media_id = _upsert_media_item(connection, folder, metadata)
+            _upsert_movie_file(connection, media_id, path, metadata["title"], thumbnail)
+
         orphan_episode_ids = _orphan_episode_ids(connection)
         orphan_movie_rows = _orphan_movie_rows(connection)
 
@@ -554,14 +538,15 @@ def scan_series_library(cleanup: bool = False) -> dict[str, int | str | bool]:
                     empty_seasons_removed,
                 )
 
+        connection.execute("INSERT OR REPLACE INTO library_index (id, scanned_at) VALUES (1, ?)", (utc_now(),))
         connection.commit()
 
     return {
         "status": "ok",
-        "series_found": series_found,
+        "series_found": len(series),
         "seasons_found": seasons_found,
         "episodes_found": episodes_found,
-        "movies_found": movies_found,
+        "movies_found": len(movies),
         "orphan_episodes_found": len(orphan_episode_ids),
         "orphan_movies_found": len(orphan_movie_rows),
         "orphan_episodes_removed": orphan_episodes_removed,

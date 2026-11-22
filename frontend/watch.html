@@ -6,17 +6,11 @@
     <title>Guarda - TVoid</title>
     <link rel="stylesheet" href="/css/style.css" />
     <script src="/js/api.js" defer></script>
+    <script src="/js/ui.js" defer></script>
     <script src="/js/watch.js" defer></script>
   </head>
   <body class="watch-body">
-    <header class="topbar">
-      <a class="logo" href="/"><span class="logo-mark">T</span><span>TVoid</span></a>
-      <nav class="nav">
-        <a href="/">Home</a>
-        <a href="/series.html">Serie TV</a>
-        <a href="/#movies">Film</a>
-      </nav>
-    </header>
+    <header class="topbar"></header>
 
     <main class="watch-page">
       <section class="watch-meta">
@@ -32,9 +26,12 @@
       </section>
 
       <section class="player-shell">
-        <video id="video-player" controls autoplay playsinline>
-          <source id="video-source" src="" type="video/mp4" />
-        </video>
+        <video id="video-player" controls autoplay playsinline></video>
+        <div id="playback-error" class="playback-error" hidden>
+          <h2>Video non disponibile</h2>
+          <p id="playback-error-message" role="status"></p>
+          <button id="retry-playback" class="button secondary" type="button">Riprova</button>
+        </div>
       </section>
     </main>
   </body>

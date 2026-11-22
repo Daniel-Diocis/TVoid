@@ -6,17 +6,12 @@
     <title>TVoid</title>
     <link rel="stylesheet" href="/css/style.css" />
     <script src="/js/api.js" defer></script>
+    <script src="/js/ui.js" defer></script>
+    <script src="/js/library.js" defer></script>
     <script src="/js/home.js" defer></script>
   </head>
   <body>
-    <header class="topbar">
-      <a class="logo" href="/"><span class="logo-mark">T</span><span>TVoid</span></a>
-      <nav class="nav">
-        <a class="active" href="/">Home</a>
-        <a href="/series.html">Serie TV</a>
-        <a href="/#movies">Film</a>
-      </nav>
-    </header>
+    <header class="topbar"></header>
 
     <main class="page">
       <section class="hero" id="featured-hero">
@@ -26,6 +21,11 @@
           <p class="hero-copy">Le tue serie in streaming dal filesystem, con ripresa automatica della visione.</p>
         </div>
       </section>
+
+      <div class="library-update">
+        <button class="button secondary" id="refresh-library" type="button" disabled>Aggiorna libreria</button>
+        <span id="library-status" role="status"></span>
+      </div>
 
       <section class="content-section" id="continue-section">
         <div class="section-heading">
@@ -37,7 +37,7 @@
       <section class="content-section">
         <div class="section-heading">
           <h2>Serie TV</h2>
-          <a class="text-link" href="/series.html">Vedi tutte</a>
+          <a class="text-link" href="/catalog.html?category=series">Vedi tutte</a>
         </div>
         <div class="row-scroll" id="series-row" aria-live="polite" aria-atomic="false"></div>
       </section>
@@ -45,6 +45,7 @@
       <section class="content-section" id="movies">
         <div class="section-heading">
           <h2>Film</h2>
+          <a class="text-link" href="/catalog.html?category=movies">Vedi tutti</a>
         </div>
         <div class="row-scroll" id="movies-row" aria-live="polite" aria-atomic="false"></div>
       </section>

@@ -1,3 +1,12 @@
+// Older cached series pages also load this script, but lack the detail view.
+if (window.location.pathname === "/series.html" && !document.querySelector("#detail-content")) {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has("view")) {
+    url.searchParams.set("view", "2");
+    window.location.replace(url.href);
+  }
+}
+
 const TVoidAPI = {
   async request(path, options = {}) {
     const response = await fetch(path, {
@@ -20,8 +29,12 @@ const TVoidAPI = {
     return response.json();
   },
 
-  scan() {
-    return this.request("/api/scan", { method: "POST" });
+  startScan(initial = false) {
+    return this.request(initial ? "/api/scan/start?initial=true" : "/api/scan/start", { method: "POST" });
+  },
+
+  scanStatus() {
+    return this.request("/api/scan/status");
   },
 
   home() {
@@ -44,58 +57,23 @@ const TVoidAPI = {
     return this.request(`/api/movies/${id}`);
   },
 
+  startPlaybackSession() {
+    return this.request("/api/playback-session", { method: "POST" });
+  },
+
   saveProgress(id, payload, keepalive = false) {
-    return fetch(`/api/progress/${id}`, {
+    return this.request(`/api/progress/${id}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
       keepalive,
     });
   },
 
   saveMovieProgress(id, payload, keepalive = false) {
-    return fetch(`/api/movie-progress/${id}`, {
+    return this.request(`/api/movie-progress/${id}`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
       keepalive,
     });
   },
 };
-
-function qs(name) {
-  return new URLSearchParams(window.location.search).get(name);
-}
-
-function escapeHTML(value) {
-  return String(value ?? "").replace(/[&<>"']/g, (char) => {
-    const entities = {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;",
-    };
-    return entities[char];
-  });
-}
-
-function mediaCode(season, episode) {
-  return `S${String(season).padStart(2, "0")}E${String(episode).padStart(2, "0")}`;
-}
-
-function installImageFallbacks(scope = document) {
-  scope.querySelectorAll("img[data-fallback]").forEach((image) => {
-    image.addEventListener(
-      "error",
-      () => {
-        image.remove();
-      },
-      { once: true },
-    );
-  });
-}
-
-function emptyState(text) {
-  return `<div class="empty-state">${escapeHTML(text)}</div>`;
-}

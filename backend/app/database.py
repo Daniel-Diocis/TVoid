@@ -9,7 +9,6 @@ def utc_now() -> str:
 
 
 def get_connection() -> sqlite3.Connection:
-    ensure_runtime_directories()
     connection = sqlite3.connect(DB_PATH)
     connection.row_factory = sqlite3.Row
     connection.execute("PRAGMA foreign_keys = ON")
@@ -22,6 +21,17 @@ def init_db() -> None:
     with get_connection() as connection:
         connection.executescript(
             """
+            CREATE TABLE IF NOT EXISTS library_index (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                scanned_at TEXT NOT NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS playback_counter (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                last_session INTEGER NOT NULL
+            );
+            INSERT OR IGNORE INTO playback_counter VALUES (1, 0);
+
             CREATE TABLE IF NOT EXISTS media_items (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 category TEXT NOT NULL,
@@ -107,6 +117,13 @@ def init_db() -> None:
             );
             """
         )
+
+        connection.execute("BEGIN IMMEDIATE")
+        for table in ("watch_progress", "movie_progress"):
+            columns = {row[1] for row in connection.execute(f"PRAGMA table_info({table})")}
+            for column in ("playback_session", "save_sequence"):
+                if column not in columns:
+                    connection.execute(f"ALTER TABLE {table} ADD COLUMN {column} INTEGER NOT NULL DEFAULT 0")
 
         connection.execute(
             """
